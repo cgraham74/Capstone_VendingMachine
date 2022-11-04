@@ -7,7 +7,11 @@ Customers can feed money and receive change in the smallest amount of coins poss
 We used the greedy Algorithm to return change. 
 We also incuded the optional sales output feature with unique file names. 
 
-Run VendingMachineCLI
+
+
+#Run VendingMachineCLI
+
+
 You will be given 3 choices.
   1.) Display Vending Machine Items
     Will display all items loaded from vendingmachine.csv into a List datastructure located within the Inventory class
