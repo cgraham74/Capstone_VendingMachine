@@ -10,7 +10,7 @@ public class PurchaseProcess {
     private final String salesLogPath;
     private final SalesLog salesLog;
     private double currentBalance;
-    private final double endingBalance = 0;
+
 
 
     NumberFormat formatter = NumberFormat.getCurrencyInstance();

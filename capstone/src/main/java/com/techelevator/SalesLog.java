@@ -15,7 +15,6 @@ public class SalesLog extends GenerateLogTime {
 
     private Map<String, Integer> salesMap = new HashMap<>();
     private NumberFormat formatter = NumberFormat.getCurrencyInstance();
-    private double totalGrossSales;
     private String logPath = "log\\";
     private String salesLogPath;
 
