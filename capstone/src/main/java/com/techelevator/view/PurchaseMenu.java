@@ -40,7 +40,7 @@ public class PurchaseMenu {
 
                     break;
                 case FINISH_TRANSACTION:
-                    purchaseProcess.makeChange(inventory);
+                    purchaseProcess.completeTransaction(inventory);
                     break purchaseLoop;
             }
         }

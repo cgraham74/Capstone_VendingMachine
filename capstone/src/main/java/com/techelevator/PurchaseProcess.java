@@ -1,26 +1,16 @@
 package com.techelevator;
 
-import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.*;
 
 public class PurchaseProcess {
 
     //<editor-fold desc="*DATA MEMBERS*">
-    private SecurityLog securityLog = new SecurityLog();
-    private String salesLogPath;
-    private SalesLog salesLog;
-    private double currentMoney;
-    private double moneyEntered;
-    private final double ONE_DOLLAR_BILL = 1.00;
-    private final double TWO_DOLLAR_BILL = 2.00;
-    private final double FIVE_DOLLAR_BILL = 5.00;
-    private final double TEN_DOLLAR_BILL = 10.00;
-    private final int MAX_COUNT = 5;
-    private final int QUARTER = 25;
-    private final int DIME = 10;
-    private final int NICKEL = 5;
-    private final int PERCENT = 100;
+    private final SecurityLog securityLog = new SecurityLog();
+    private final String salesLogPath;
+    private final SalesLog salesLog;
+    private double currentBalance;
+    private final double endingBalance = 0;
 
 
     NumberFormat formatter = NumberFormat.getCurrencyInstance();
@@ -37,100 +27,131 @@ public class PurchaseProcess {
 
     }
 
-
-    public double getCurrentMoney() {
-        return currentMoney;
+    public double getCurrentBalance() {
+        return currentBalance;
     }
 
-    public void setCurrentMoney(double currentMoney) {
-        this.currentMoney = currentMoney;
+    public void setCurrentBalance(double currentMoney) {
+        this.currentBalance = currentMoney;
     }
 
     public double feedMoney() {
         Scanner moneyIn = new Scanner(System.in);
         String pleaseEnter = "Please Enter Whole Dollar Amount: \r\n" +
-                "Example: (1), (2), (5), (10)";
+                "Example: (1), (2), (5), (10) or (0) to exit.";
         System.out.println(pleaseEnter);
 
         try {
-            if (moneyIn.hasNextDouble()) {
-                moneyEntered = moneyIn.nextDouble();
+            while (moneyIn.hasNextDouble()) {
+                double moneyEntered = moneyIn.nextDouble();
+                if (moneyEntered == 0){
+                    break;
+                }
                 if (moneyEntered % 1 == 0) {
+                    double ONE_DOLLAR_BILL = 1.00;
+                    double TWO_DOLLAR_BILL = 2.00;
+                    double FIVE_DOLLAR_BILL = 5.00;
+                    double TEN_DOLLAR_BILL = 10.00;
                     if (moneyEntered == ONE_DOLLAR_BILL || moneyEntered == TWO_DOLLAR_BILL ||
                             moneyEntered == FIVE_DOLLAR_BILL || moneyEntered == TEN_DOLLAR_BILL) {
-                        currentMoney += moneyEntered;
+                        securityLog.log("FEED MONEY", moneyEntered, currentBalance += moneyEntered);
+
+
                     } else {
-                        System.out.println(pleaseEnter);
+                        System.err.println("Invalid currency" + "\n");
+                        System.err.println(pleaseEnter);
                     }
+
                 }
-                System.out.println("Current Money Provided: " + formatter.format(currentMoney));
+                System.out.println("Current balance: " + formatter.format(currentBalance));
             }
-            securityLog.log("FEED MONEY", moneyEntered, currentMoney);
+
 
         } catch (InputMismatchException e) {
             System.err.println(e);
         }
-        return currentMoney;
+        return currentBalance;
     }
 
     public void purchaseItem(Inventory inventory) {
         boolean isMatch = false;
 
-        Scanner productCode = new Scanner(System.in);
-        System.out.println("Please enter Product Key!");
-        String product = productCode.nextLine();
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Please enter Product Key! ");
+        String userInput = scanner.nextLine();
 
-        for (Product vp : inventory.getVendingProducts()) {
-            if (product.equalsIgnoreCase(vp.getProductId())) {
+        for (Product product : inventory.getVendingProducts()) {
+            if (userInput.equalsIgnoreCase(product.getProductId())) {
                 isMatch = true;
-                if (vp.getProductCount() > 0) {
-                    if (currentMoney >= vp.getProductPrice()) {
-                        double moneyBeforeDecrement = currentMoney;
-                        currentMoney -= vp.getProductPrice();
-                        System.out.println(vp.getProductName() + " " + formatter.format(vp.getProductPrice()));
-                        vp.setProductCount(vp.getProductCount() - 1);
-                        SoundEffects soundEffects = new SoundEffects(vp);
-                        System.out.println("Balance: " + formatter.format(currentMoney));
+                if (product.getProductCount() > 0) {
+                    if (currentBalance >= product.getProductPrice()) {
+                        securityLog.log(product.getProductName() + " $" + product.getProductPrice(),
+                                currentBalance, currentBalance -= product.getProductPrice());
+                        System.out.println("Purchased: " + product.getProductName() + " " + formatter.format(product.getProductPrice()));
+                        product.setProductCount(product.getProductCount() - 1);
+                        SoundEffects soundEffects = new SoundEffects(product);
+                        System.out.println("Balance: " + formatter.format(currentBalance));
                         System.out.println(soundEffects);
-                        securityLog.log(vp.getProductName() + " $" + vp.getProductPrice(),
-                                moneyBeforeDecrement, currentMoney);
-                        productSales.put(vp.getProductName(), (MAX_COUNT - vp.getProductCount()));
+
+                        int MAX_COUNT = 5;
+                        productSales.put(product.getProductName(), (MAX_COUNT - product.getProductCount()));
 
                     } else {
                         System.out.println("Insufficient Funds! \nYour current funds are: "
-                                + formatter.format(currentMoney));
+                                + formatter.format(currentBalance));
                     }
                 } else {
-                    inventory.displayItemCount(vp.getProductCount());
-                    if (vp.getProductCount() == 0) {
+                    inventory.displayItemCount(product.getProductCount());
+                    if (product.getProductCount() == 0) {
                         System.out.println("SOLD OUT! Please select something else!");
                     }
                 }
             }
         }
         if (!isMatch) {
-            System.out.println("Invalid Product Key!");
+            System.err.println("Invalid Product Key!");
         }
     }
 
-    public String makeChange(Inventory inventory) {
-        securityLog.log("GIVE CHANGE", currentMoney, 0.00);
+    public String completeTransaction(Inventory inventory) {
         salesLog.log(productSales, inventory);
-        double makeChange = currentMoney * PERCENT;
-        int numberOfQuarters = (int) makeChange / QUARTER;
-        makeChange = Math.round(makeChange - (QUARTER * numberOfQuarters));
-        int numberOfDimes = (int) makeChange / DIME;
-        makeChange = Math.round(makeChange - (DIME * numberOfDimes));
-        int numberOfNickels = (int) makeChange / NICKEL;
-        makeChange = Math.round(makeChange - (NICKEL * numberOfNickels));
-        System.out.println("Dispensing Change: " + formatter.format(currentMoney) + "\r\n" + "Quarters: " + numberOfQuarters +
-                "\r\nDimes: " + numberOfDimes + "\r\nNickels: " + numberOfNickels);
-        System.out.println("Vending Machine Balance: " + formatter.format(makeChange) +
+        double balanceBeforeTransaction = currentBalance;
+
+        System.out.println("Dispensing Change: " + formatter.format(currentBalance));
+        int PERCENT = 100;
+        String greedyCoinString = greedyCoin((int) Math.round(currentBalance * PERCENT));
+        securityLog.log("GIVE CHANGE", balanceBeforeTransaction, currentBalance);
+
+        System.out.println(greedyCoinString);
+        System.out.println("Vending Machine Balance: " + formatter.format(currentBalance) +
                 "\r\nThanks for using the Vendo-Matic 800!");
-        //returning the string so that this method can be tested
-        return "Dispensing Change: " + formatter.format(currentMoney) + "\r\n" + "Quarters: " + numberOfQuarters +
-                "\r\nDimes: " + numberOfDimes + "\r\nNickels: " + numberOfNickels + "\r\n" +
-                "Vending Machine Balance: " + formatter.format(makeChange) +
+
+        return "Dispensing Change: " + formatter.format(balanceBeforeTransaction) + "\r\n" + greedyCoin((int) Math.round(balanceBeforeTransaction * PERCENT)) + "\r\n" +
+                "Vending Machine Balance: " + formatter.format(currentBalance) +
                 "\r\nThanks for using the Vendo-Matic 800!";
+    }
+
+    public String greedyCoin(int changeDue) {
+        int NICKEL = 5, DIME = 10, QUARTER = 25;
+        int[] coins = {QUARTER, DIME, NICKEL};
+        int coinIndex = 0;
+        int totalQuarters = 0, totalDimes = 0, totalNickels = 0;
+
+        while (changeDue > 0) {
+
+            if (coins[coinIndex] > changeDue) {
+                coinIndex++;
+            } else {
+                totalQuarters += coinIndex == 0 ? 1 : 0;
+                totalDimes += coinIndex == 1 ? 1 : 0;
+                totalNickels += coinIndex == 2 ? 1 : 0;
+                changeDue = changeDue - coins[coinIndex];
+            }
+            if (changeDue == 0) {
+                break;
+            }
+        }
+        setCurrentBalance(changeDue);
+        return "Quarters: " + totalQuarters + "\r\n" + "Dimes: " + totalDimes + "\r\n" + "Nickels: " + totalNickels + "\r\n";
     }
 }

@@ -83,7 +83,7 @@ public class SalesLog extends GenerateLogTime {
         try (PrintWriter salesOutput = new PrintWriter(new FileOutputStream(salesLogPath, true))) {
             double totalSales = 0;
             for (String key : salesMap.keySet()) {
-                salesOutput.print(key + "|" + salesMap.get(key) + "\n");
+                salesOutput.print(key + " | " + salesMap.get(key) + "\n");
                 for (Product i : inventory.getVendingProducts()) {
                     if (i.getProductName().equals(key)) {
                         totalSales += i.getProductPrice() * salesMap.get(key);
