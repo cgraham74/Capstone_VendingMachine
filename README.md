@@ -34,3 +34,4 @@ You will be given 3 choices.
   There is a hidden Option on this menu.  If you select 4 - It generates a custom sales report for the life of the machine with a unique timestamped filename.
       
     
+![greedyCoin](https://user-images.githubusercontent.com/18030411/214900727-042a5506-c381-4599-a035-15e8c6921901.png)
